@@ -1,3 +1,1 @@
-<?xml version="1.0"?>
-<sweep runs="1">
-</sweep>
+<?xml version="1.0" ?><sweep runs="1"><parameter name="bee_count" type="constant" constant_type="int" value="25"></parameter><parameter name="flower_count" type="constant" constant_type="int" value="50"></parameter><parameter name="buzzer_count" type="constant" constant_type="int" value="30"></parameter><parameter name="hive_count" type="constant" constant_type="int" value="1"></parameter><parameter name="comm_radius" type="constant" constant_type="int" value="5"></parameter></sweep>
