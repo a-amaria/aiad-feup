@@ -19,3 +19,5 @@ velocity\.log\.1
 *.log
 
 Repast\.settings
+
+\.settings/
