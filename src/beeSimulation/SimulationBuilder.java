@@ -50,6 +50,8 @@ public class SimulationBuilder implements ContextBuilder<Object>
 	int flowerCount = params.getInteger("flower_count");
 	int communicationRadius = params.getInteger("comm_radius");
 	int hiveCount = params.getInteger("hive_count");
+	int buzzerCount = params.getInteger("buzzer_count");
+
 
 	for (int i = 0; i < beeCount; i++)
 	    context.add(new Bee(space, grid, communicationRadius));
@@ -60,9 +62,13 @@ public class SimulationBuilder implements ContextBuilder<Object>
 	for (int i = 0; i < hiveCount; i++)
 	    context.add(new Hive(space, grid));
 	
+	for (int i = 0; i < buzzerCount; i++) {
+		context.add(new Buzzer(space, grid));
+	}
+	
 	// total honey in flowers - another important fact
 
-	// iterates through the all agents in the context, retrieves each one’s location
+	// iterates through the all agents in the context, retrieves each oneï¿½s location
 	// in the ContinuousSpace
 	// and moves it to the corresponding location in the Grid.
 	for (Object obj : context)

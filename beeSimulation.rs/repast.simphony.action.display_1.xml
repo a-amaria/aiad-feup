@@ -3,6 +3,10 @@
   <type>2D</type>
   <styles>
     <entry>
+      <string>beeSimulation.Buzzer</string>
+      <string>repast.simphony.visualization.editedStyle.EditedStyle2D</string>
+    </entry>
+    <entry>
       <string>beeSimulation.Flower</string>
       <string>repast.simphony.visualization.editedStyle.EditedStyle2D</string>
     </entry>
@@ -16,6 +20,10 @@
     </entry>
   </styles>
   <editedStyles>
+    <entry>
+      <string>beeSimulation.Buzzer</string>
+      <string>beeSimulation.Buzzer.style_2.xml</string>
+    </entry>
     <entry>
       <string>beeSimulation.Flower</string>
       <string>beeSimulation.Flower.style_0.xml</string>
@@ -39,15 +47,19 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>-936348989</hashCode>
+    <hashCode>860844366</hashCode>
   </schedParams>
   <layoutClassName>foo.bar.baz</layoutClassName>
   <layoutProjection>space</layoutProjection>
   <layoutInterval>0</layoutInterval>
   <layerOrder>
     <entry>
-      <string>beeSimulation.Flower</string>
+      <string>beeSimulation.Buzzer</string>
       <int>1</int>
+    </entry>
+    <entry>
+      <string>beeSimulation.Flower</string>
+      <int>2</int>
     </entry>
     <entry>
       <string>beeSimulation.Hive</string>
@@ -55,7 +67,7 @@
     </entry>
     <entry>
       <string>beeSimulation.Bee</string>
-      <int>2</int>
+      <int>3</int>
     </entry>
   </layerOrder>
   <projections>

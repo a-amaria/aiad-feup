@@ -12,8 +12,11 @@
 	<parameter name="comm_radius" displayName="Communication Radius"
 		type="int" defaultValue="5" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
-	<parameter name="hive_count" displayName="Hive Count"
-		type="int" defaultValue="1" isReadOnly="false"
+	<parameter name="hive_count" displayName="Hive Count" type="int"
+		defaultValue="1" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+	<parameter name="buzzer_count" displayName="Buzzer Count"
+		type="int" defaultValue="30" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 </parameters>
 
