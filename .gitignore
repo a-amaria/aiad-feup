@@ -3,3 +3,17 @@
 
 debug\.log
 /bin/
+
+\.settings/org\.eclipse\.jdt\.core\.prefs
+
+\.settings/org\.eclipse\.jdt\.ui\.prefs
+
+hs_err_pid24568\.log
+
+hs_err_pid45148\.log
+
+velocity\.log
+
+velocity\.log\.1
+
+*.log
