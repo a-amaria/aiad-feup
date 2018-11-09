@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import bsh.This;
 import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.engine.watcher.Watch;
@@ -35,17 +36,19 @@ public class Bee
     private int maxNectar;
     private int communicationRadius;
     private boolean isAlive;
+    private int beeSight;
 
-    public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius)
-    {
+    public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight)
+    {   
 	this.space = space;
 	this.grid = grid;
 	this.fightingSkill = RandomHelper.nextIntFromTo(0, 10);
 	this.collectingSkill = 10 - this.fightingSkill;
 	this.currentNectar = 0;
-	this.maxNectar = 100;
+	this.maxNectar = 50;
 	this.communicationRadius = communicationRadius;
 	this.isAlive = true;
+	this.beeSight = beeSight;
     }
 
     /********************** GETTERS *************************/
@@ -90,6 +93,11 @@ public class Bee
 	return isAlive;
     }
 
+    public int getBeeSight()
+    {
+	return beeSight;
+    }
+
     public void setCurrentNectar(int nectar)
     {
 	this.currentNectar = nectar;
@@ -102,15 +110,16 @@ public class Bee
     {
 	GridPoint pt = grid.getLocation(this);
 
+	System.out.println("at step's beggining");
 	if (this.getCurrentNectar() < this.getMaxNectar())
 	{
 
-	    GridCellNgh<Flower> nghCreator = new GridCellNgh<Flower>(grid, pt, Flower.class, 15, 15);
+	    GridCellNgh<Flower> nghCreator = new GridCellNgh<Flower>(grid, pt, Flower.class, this.getBeeSight(), this.getBeeSight());
 	    List<GridCell<Flower>> gridCells = nghCreator.getNeighborhood(true);
- 
+
 	    Flower flower = new Flower();
 	    Flower flowerWithMostNectar = new Flower();
-	    GridPoint cellWithMostNectar = null;
+	    GridCell<Flower> cellWithMostNectar = null;
 	    double max = -1.0;
 
 	    for (GridCell<Flower> cell : gridCells)
@@ -123,27 +132,36 @@ public class Bee
 			if (flower.getCurrNectar() > max)
 			{
 			    max = flower.getCurrNectar();
-			    cellWithMostNectar = cell.getPoint();
+			    cellWithMostNectar = cell;
 			    flowerWithMostNectar = (Flower) item;
 			}
 		    }
 		}
 	    }
-	    System.out.println("Im about to move ");
-	    moveTowards(cellWithMostNectar);
-	    System.out.println("Just moved ");
+	    moveTowards(cellWithMostNectar.getPoint());
+	    pt = grid.getLocation(this);
+	    GridCellNgh<Flower> closeNghCreator = new GridCellNgh<Flower>(grid, pt, Flower.class, 1, 1);
+	    List<GridCell<Flower>> closeGridCells = closeNghCreator.getNeighborhood(true);
+	    Boolean inNeighborhood = false;
+	    for(GridCell<Flower> neighbor : closeGridCells) {
+		if(neighbor.getPoint().equals(cellWithMostNectar.getPoint())) {
+		    inNeighborhood=true;
+		    break;
+		}
+	    }
+	    System.out.println("NEIGHBOURHOOD CONTAINS FLOWER? : " + inNeighborhood);
 	    if (cellWithMostNectar != null 
-		    && pt.getX() == cellWithMostNectar.getX() && pt.getY() == cellWithMostNectar.getY() 
+		    && inNeighborhood
 		    && flowerWithMostNectar.getCurrNectar() > 0
 		    && this.getCollectingSkill() > 0)
 	    {
-		System.out.println("Im about to collect ");
 		collectNectar(this.getCurrentNectar(), flowerWithMostNectar);
+		return;
 	    }
 	    System.out.println("Wont collect yet ");
 	}
 
-	else
+	else if (this.getCurrentNectar() > this.getMaxNectar())
 	{
 	    System.out.println("Full of honey ");
 	    GridCellNgh<Hive> nghCreator = new GridCellNgh<Hive>(grid, pt, Hive.class, 40, 40);
@@ -161,12 +179,14 @@ public class Bee
 		}
 	    }
 	    moveTowards(closerHiveCell);
+	    return;
 	}
-	// fightWasps(null);
+	return;
     }
 
     public void moveTowards(GridPoint pt)
     {
+	//System.out.println("MOVE GOAL: [" + pt.getX() + ", " + pt.getY() + "]");
 	NdPoint myPoint = space.getLocation(this);
 	double angle = 0;
 	NdPoint goalPoint;
@@ -177,7 +197,7 @@ public class Bee
 	    angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, goalPoint);
 	}
 
-	if (pt != null && !pt.equals(grid.getLocation(this)))
+	else if (pt != null && !pt.equals(grid.getLocation(this)))
 	{
 	    goalPoint = new NdPoint(pt.getX(), pt.getY());
 	    angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, goalPoint);
@@ -197,33 +217,9 @@ public class Bee
 	    flower.setCurrNectar(0);
 	else
 	    flower.setCurrNectar(flowerCurrNectar - this.getCollectingSkill());
+	
 	this.setCurrentNectar(beeCurrNectar + Math.min(flowerCurrNectar, this.getCollectingSkill()));
-	System.out.println("no flower nectar or skill below zero ");
 	return;
-    }
-
-    public void fightWasps(GridCell<Buzzer> buzz)
-    {
-	GridPoint myCurrPoint = grid.getLocation(this);
-
-	GridCellNgh<Buzzer> nghCreator = new GridCellNgh<Buzzer>(grid, myCurrPoint, Buzzer.class, 1, 1);
-	List<GridCell<Buzzer>> gridCells = nghCreator.getNeighborhood(true);
-	SimUtilities.shuffle(gridCells, RandomHelper.getUniform());
-
-	GridPoint pointWithLeastWasps = null;
-	int min = Integer.MAX_VALUE;
-
-	for (GridCell<Buzzer> cell : gridCells)
-	{
-	    if (cell.size() < min)
-	    {
-		pointWithLeastWasps = cell.getPoint();
-		min = cell.size();
-	    }
-	}
-
-	if (this.getFightingSkill() < 5 && this.getIsAlive())
-	    moveTowards(pointWithLeastWasps);
     }
 
     /*
@@ -239,7 +235,7 @@ public class Bee
      * chegaram deviam ir comunicando q ja chegaram // ate chegar a um certo numero,
      * e // caso ja tenham ido muitas n vai // no caso do mel - mais complexo,
      * avaliar as cargas das q estao mais perto e a // quantidade de nectar q tem
-     * nas flores da zona }
+     * nas flores da zona (looool)}
      */
 
 }
