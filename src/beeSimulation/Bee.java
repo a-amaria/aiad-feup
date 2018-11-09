@@ -37,18 +37,20 @@ public class Bee
     private int communicationRadius;
     private boolean isAlive;
     private int beeSight;
+    private List<Hive> hives;
 
-    public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight)
+    public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight, List<Hive> hives)
     {   
 	this.space = space;
 	this.grid = grid;
 	this.fightingSkill = RandomHelper.nextIntFromTo(0, 10);
 	this.collectingSkill = 10 - this.fightingSkill;
 	this.currentNectar = 0;
-	this.maxNectar = 50;
+	this.maxNectar = 30;
 	this.communicationRadius = communicationRadius;
 	this.isAlive = true;
 	this.beeSight = beeSight;
+	this.hives = hives;
     }
 
     /********************** GETTERS *************************/
@@ -97,10 +99,15 @@ public class Bee
     {
 	return beeSight;
     }
-
+    
     public void setCurrentNectar(int nectar)
     {
 	this.currentNectar = nectar;
+    }
+ 
+    public List<Hive> getHives()
+    {
+	return hives;
     }
 
     /********************** GETTERS END *************************/
@@ -143,13 +150,14 @@ public class Bee
 	    GridCellNgh<Flower> closeNghCreator = new GridCellNgh<Flower>(grid, pt, Flower.class, 1, 1);
 	    List<GridCell<Flower>> closeGridCells = closeNghCreator.getNeighborhood(true);
 	    Boolean inNeighborhood = false;
-	    for(GridCell<Flower> neighbor : closeGridCells) {
-		if(neighbor.getPoint().equals(cellWithMostNectar.getPoint())) {
+	    for(GridCell<Flower> neighbor : closeGridCells) 
+	    {
+		if(neighbor.getPoint().equals(cellWithMostNectar.getPoint())) 
+		{
 		    inNeighborhood=true;
 		    break;
 		}
 	    }
-	    System.out.println("NEIGHBOURHOOD CONTAINS FLOWER? : " + inNeighborhood);
 	    if (cellWithMostNectar != null 
 		    && inNeighborhood
 		    && flowerWithMostNectar.getCurrNectar() > 0
@@ -161,21 +169,18 @@ public class Bee
 	    System.out.println("Wont collect yet ");
 	}
 
-	else if (this.getCurrentNectar() > this.getMaxNectar())
+	else if (this.getCurrentNectar() >= this.getMaxNectar())
 	{
-	    System.out.println("Full of honey ");
-	    GridCellNgh<Hive> nghCreator = new GridCellNgh<Hive>(grid, pt, Hive.class, 40, 40);
-	    List<GridCell<Hive>> gridCells = nghCreator.getNeighborhood(true);
-
 	    double minDist = Double.MAX_VALUE;
 	    GridPoint closerHiveCell = null;
-	    for (GridCell<Hive> cell : gridCells)
+	    for (Hive hive : this.getHives())
 	    {
-		double dist = Point2D.distance(pt.getX(), pt.getY(), cell.getPoint().getX(), cell.getPoint().getY());
+		double dist = Point2D.distance(pt.getX(), pt.getY(), grid.getLocation(hive).getX(), grid.getLocation(hive).getY());
+		System.out.println("dist: "+ dist);
 		if (dist < minDist)
 		{
 		    minDist = dist;
-		    closerHiveCell = cell.getPoint();
+		    closerHiveCell = grid.getLocation(hive);
 		}
 	    }
 	    moveTowards(closerHiveCell);
@@ -218,7 +223,8 @@ public class Bee
 	else
 	    flower.setCurrNectar(flowerCurrNectar - this.getCollectingSkill());
 	
-	this.setCurrentNectar(beeCurrNectar + Math.min(flowerCurrNectar, this.getCollectingSkill()));
+	int newBeeNectar = beeCurrNectar + Math.min(flowerCurrNectar, this.getCollectingSkill());
+	this.setCurrentNectar(Math.min(newBeeNectar, 30));
 	return;
     }
 

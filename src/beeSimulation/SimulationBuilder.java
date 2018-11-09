@@ -3,6 +3,9 @@
  */
 package beeSimulation;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import repast.simphony.context.Context;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
@@ -52,16 +55,25 @@ public class SimulationBuilder implements ContextBuilder<Object>
 	int hiveCount = params.getInteger("hive_count");
 	int buzzerCount = params.getInteger("buzzer_count");
 	int beeSight = params.getInteger("bee_sight");
-
-
-	for (int i = 0; i < beeCount; i++)
-	    context.add(new Bee(space, grid, communicationRadius, beeSight));
+	
+	List<Hive> hives = new ArrayList<>();
 
 	for (int i = 0; i < flowerCount; i++)
 	    context.add(new Flower(space, grid));
 
 	for (int i = 0; i < hiveCount; i++)
 	    context.add(new Hive(space, grid));
+	
+	for (Object obj : context)
+	{
+	    if (obj instanceof Hive)
+	    {
+		hives.add((Hive)obj);
+	    }
+	}
+	
+	for (int i = 0; i < beeCount; i++)
+	    context.add(new Bee(space, grid, communicationRadius, beeSight, hives));
 	
 	for (int i = 0; i < buzzerCount; i++) {
 		context.add(new Buzzer(space, grid));
