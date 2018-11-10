@@ -19,65 +19,65 @@ import repast.simphony.space.grid.GridPoint;
 public class Bee
 {
 
-    private ContinuousSpace<Object> space;
-    private Grid<Object> grid;
-    private int fightingSkill;
-    private int collectingSkill;
-    private int currentNectar;
-    private int maxNectar;
-    private int communicationRadius;
-    private boolean isAlive;
-    private int beeSight;
-    private List<Hive> hives;
-    private GridCell<Flower> cellWithMostNectar;
-    private Flower flowerWithMostNectar;
+	private ContinuousSpace<Object> space;
+	private Grid<Object> grid;
+	private int fightingSkill;
+	private int collectingSkill;
+	private int currentNectar;
+	private int maxNectar;
+	private int communicationRadius;
+	private boolean isAlive;
+	private int beeSight;
+	private List<Hive> hives;
+	private GridCell<Flower> cellWithMostNectar;
+	private Flower flowerWithMostNectar;
 
-    public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight,
-	    List<Hive> hives)
-    {
-	this.space = space;
-	this.grid = grid;
-	this.fightingSkill = RandomHelper.nextIntFromTo(0, 10);
-	this.collectingSkill = 10 - this.fightingSkill;
-	this.currentNectar = 0;
-	this.maxNectar = 30;
-	this.communicationRadius = communicationRadius;
-	this.isAlive = true;
-	this.beeSight = beeSight;
-	this.hives = hives;
-	this.cellWithMostNectar = null;
-	this.flowerWithMostNectar = new Flower();
-    }
+	public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight,
+			List<Hive> hives)
+	{
+		this.space = space;
+		this.grid = grid;
+		this.fightingSkill = RandomHelper.nextIntFromTo(0, 10);
+		this.collectingSkill = 10 - this.fightingSkill;
+		this.currentNectar = 0;
+		this.maxNectar = 30;
+		this.communicationRadius = communicationRadius;
+		this.isAlive = true;
+		this.beeSight = beeSight;
+		this.hives = hives;
+		this.cellWithMostNectar = null;
+		this.flowerWithMostNectar = new Flower();
+	}
 
-    /********************** GETTERS *************************/
+	/********************** GETTERS *************************/
 
-    public ContinuousSpace<Object> getSpace()
-    {
+	public ContinuousSpace<Object> getSpace()
+	{
 	return space;
-    }
+	}
 
-    public Grid<Object> getGrid()
-    {
+	public Grid<Object> getGrid()
+	{
 	return grid;
-    }
+	}
 
-    public int getFightingSkill()
-    {
+	public int getFightingSkill()
+	{
 	return fightingSkill;
-    }
+	}
 
-    public int getCollectingSkill()
-    {
+	public int getCollectingSkill()
+	{
 	return collectingSkill;
-    }
+	}
 
-    public int getCurrentNectar()
-    {
+	public int getCurrentNectar()
+	{
 	return currentNectar;
-    }
+	}
 
-    public int getMaxNectar()
-    {
+	public int getMaxNectar()
+	{
 	return maxNectar;
     }
 
@@ -136,6 +136,10 @@ public class Bee
     @ScheduledMethod(start = 1, interval = 1)
     public void step()
     {
+    	 for (Hive hive : this.getHives())
+ 	    {
+    		 hive.setNrTotalNectar(smellRemainingNectar());
+ 	    }
 	GridPoint pt = grid.getLocation(this);
 
 	if (this.getCurrentNectar() >= this.getMaxNectar() || (smellRemainingNectar() == 0))
@@ -150,6 +154,11 @@ public class Bee
 		{
 		    minDist = dist;
 		    closerHiveCell = grid.getLocation(hive);
+		}
+		if(minDist == 0) 
+		{
+			hive.setNrBeesReturned();
+			
 		}
 	    }
 	    moveTowards(closerHiveCell);
@@ -241,11 +250,24 @@ public class Bee
     {
 	System.out.println("IM COLLECTING ");
 	int flowerCurrNectar = flower.getCurrNectar();
-	if ((flowerCurrNectar - this.getCollectingSkill()) < 0)
-	    flower.setCurrNectar(0);
-	else
+	if ((flowerCurrNectar - this.getCollectingSkill()) < 0) 
+	{
+		for (Hive hive : this.getHives())
+		{
+		hive.setTotalHoneyCollected(this.getCollectingSkill());
+		hive.setNrTotalNectar(smellRemainingNectar());
+		}
+	flower.setCurrNectar(0);
+	}
+	else 
+	{
+		for (Hive hive : this.getHives())
+		{
+		hive.setTotalHoneyCollected(this.getCollectingSkill());
+		hive.setNrTotalNectar(smellRemainingNectar());
+		}
 	    flower.setCurrNectar(flowerCurrNectar - this.getCollectingSkill());
-
+	}
 	int newBeeNectar = beeCurrNectar + Math.min(flowerCurrNectar, this.getCollectingSkill());
 	this.setCurrentNectar(Math.min(newBeeNectar, 30));
 	return;
@@ -263,6 +285,7 @@ public class Bee
 	}
 	return remainingNectar;
     }
+    
 
     /*
      * public void messageBees(GridPoint flowerPoint, Flower flower, String type,
