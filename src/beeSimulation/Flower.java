@@ -22,9 +22,10 @@ public class Flower
 	this.grid = grid;
 	this.currNectar = RandomHelper.nextIntFromTo(0, 25);
     }
-    
+
     public Flower()
     {
+	this.currNectar = -1;
     }
 
     public int getCurrNectar()
