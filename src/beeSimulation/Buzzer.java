@@ -6,6 +6,7 @@ package beeSimulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import beeSimulation.Bee.MyBeeBehaviour;
 import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.query.space.grid.GridCell;
@@ -18,38 +19,58 @@ import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
 import repast.simphony.util.ContextUtils;
 import repast.simphony.util.SimUtilities;
+import sajas.core.Agent;
+import sajas.core.behaviours.CyclicBehaviour;
 
-public class Buzzer
+public class Buzzer extends Agent
 {
     private ContinuousSpace<Object> space;
     private Grid<Object> grid;
+    private Context<Object> context;
 
-    public Buzzer(ContinuousSpace<Object> space, Grid<Object> grid)
+    public Buzzer(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context)
     {
 	this.space = space;
 	this.grid = grid;
+	this.context = context;
     }
 
-    @ScheduledMethod(start = 1, interval = 1)
-    public void run()
+    public void setup()
     {
-	GridPoint pt = grid.getLocation(this);
-	GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 1, 1);
-	List<GridCell<Bee>> gridCells = nghCreator.getNeighborhood(true);
-	SimUtilities.shuffle(gridCells, RandomHelper.getUniform());
+	addBehaviour(new MyBuzzerBehaviour(this));
+    }
 
-	GridPoint pointWithLeastBees = null;
-	int minCount = Integer.MAX_VALUE;
+    class MyBuzzerBehaviour extends CyclicBehaviour
+    {
+	private static final long serialVersionUID = 1L;
 
-	for (GridCell<Bee> cell : gridCells)
+	public MyBuzzerBehaviour(Agent a)
 	{
-	    if (cell.size() < minCount)
-	    {
-		pointWithLeastBees = cell.getPoint();
-		minCount = cell.size();
-	    }
+	    super(a);
 	}
-	moveTowards(pointWithLeastBees);
+
+	@Override
+	public void action()
+	{
+
+	    GridPoint pt = grid.getLocation(this);
+	    GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 1, 1);
+	    List<GridCell<Bee>> gridCells = nghCreator.getNeighborhood(true);
+	    SimUtilities.shuffle(gridCells, RandomHelper.getUniform());
+
+	    GridPoint pointWithLeastBees = null;
+	    int minCount = Integer.MAX_VALUE;
+
+	    for (GridCell<Bee> cell : gridCells)
+	    {
+		if (cell.size() < minCount)
+		{
+		    pointWithLeastBees = cell.getPoint();
+		    minCount = cell.size();
+		}
+	    }
+	    moveTowards(pointWithLeastBees);
+	}
     }
 
     public void moveTowards(GridPoint pt)
