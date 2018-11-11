@@ -36,7 +36,7 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
     private Context<Object> context;
     private Grid<Object> grid;
     private ContinuousSpace<Object> space;
-    List<Hive> hives = new ArrayList<>();
+    List<Hive> hives;
 
     public static Agent getAgent(Context<?> context, AID aid)
     {
@@ -77,16 +77,8 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	
 	spawnFlowers(space, grid, context, flowerCount);
 	spawnHives(space, grid, context, hiveCount);
-	spawnBees(space, grid, context, communicationRadius, beeSight, hives, beeCount);
+	spawnBees(space, grid, context, communicationRadius, beeSight, beeCount);
 	spawnBuzzers(space, grid, context, buzzerCount);
-	
-	for (Object obj : context)
-	{
-	    System.out.println("here");
-	    NdPoint pt = space.getLocation(obj);
-	    grid.moveTo(obj, (int) pt.getX(), (int) pt.getY());
-	}
-	
     }
 
     private void spawnFlowers(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context, int flowerCount)
@@ -102,20 +94,20 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 
     private void spawnHives(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context, int hiveCount)
     {
+	hives = new ArrayList<>();
 	for (int i = 0; i < hiveCount; i++)
 	{
 	    Hive newHive = new Hive(space, grid, context);
 	    context.add(newHive);
 	    NdPoint hivePt = space.getLocation(newHive);
 	    grid.moveTo(newHive, (int) hivePt.getX(), (int) hivePt.getY());
-	    
 	    hives.add(newHive);
 	}
 	return;
     }
 
     private void spawnBees(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context,
-	    int communicationRadius, int beeSight, List<Hive> hives, int beeCount)
+	    int communicationRadius, int beeSight,int beeCount)
     {
 	for (int i = 0; i < beeCount; i++)
 	{
@@ -171,8 +163,6 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	this.grid = grid;
 	this.space = space;
 	this.context = context;
-	
-	System.out.println("grid size at builder: " + grid.size());
 	
 	return 
 		super.build(this.context);

@@ -7,6 +7,7 @@ import java.awt.geom.Point2D;
 import java.util.List;
 
 import repast.simphony.context.Context;
+import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.query.space.grid.GridCell;
 import repast.simphony.query.space.grid.GridCellNgh;
@@ -16,6 +17,7 @@ import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
+import repast.simphony.util.ContextUtils;
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
 
@@ -34,7 +36,8 @@ public class Bee extends Agent
     private List<Hive> hives;
     private GridCell<Flower> cellWithMostNectar;
     private Flower flowerWithMostNectar;
-    private Context<Object> context; 
+    private Context<Object> context;
+    private MyBeeBehaviour movement;
 
     public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight,
 	    List<Hive> hives, Context<Object> context)
@@ -96,6 +99,11 @@ public class Bee extends Agent
 	return isAlive;
     }
 
+    public void setIsAlive(boolean state)
+    {
+	this.isAlive = state;
+    }
+
     public int getBeeSight()
     {
 	return beeSight;
@@ -140,7 +148,8 @@ public class Bee extends Agent
 
     public void setup()
     {
-	addBehaviour(new MyBeeBehaviour(this));
+	movement = new MyBeeBehaviour(this);
+	addBehaviour(movement);
     }
 
     class MyBeeBehaviour extends CyclicBehaviour
@@ -155,8 +164,7 @@ public class Bee extends Agent
 	@Override
 	public void action()
 	{
-	    GridPoint pt = getGrid().getLocation(this);
-	    System.out.println("aqui");
+	    GridPoint pt = getGrid().getLocation(Bee.this);
 	    if (getCurrentNectar() >= getMaxNectar() || (smellRemainingNectar() == 0))
 	    {
 		double minDist = Double.MAX_VALUE;
@@ -177,10 +185,9 @@ public class Bee extends Agent
 
 	    else if (getCurrentNectar() < getMaxNectar())
 	    {
-		System.out.println("grid size: " + getGrid().size());
 		GridCellNgh<Flower> nghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, getBeeSight(),
 			getBeeSight());
-		System.out.println("aqui3");
+
 		List<GridCell<Flower>> gridCells = nghCreator.getNeighborhood(true);
 		Flower flower = new Flower();
 		double max = getFlowerWithMostNectar().getCurrNectar();
@@ -208,7 +215,7 @@ public class Bee extends Agent
 		}
 		moveTowards(getCellWithMostNectar().getPoint());
 
-		pt = getGrid().getLocation(this);
+		pt = getGrid().getLocation(Bee.this);
 		GridCellNgh<Flower> closeNghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, 1, 1);
 		List<GridCell<Flower>> closeGridCells = closeNghCreator.getNeighborhood(true);
 		Boolean inNeighborhood = false;
@@ -234,7 +241,7 @@ public class Bee extends Agent
 
     public void moveTowards(GridPoint pt)
     {
-	NdPoint myPoint = space.getLocation(this);
+	NdPoint myPoint = space.getLocation(Bee.this);
 	double angle = 0;
 	NdPoint goalPoint;
 
@@ -244,28 +251,28 @@ public class Bee extends Agent
 	    angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, goalPoint);
 	}
 
-	else if (pt != null && pt != getGrid().getLocation(this))
+	else if (pt != null && pt != getGrid().getLocation(Bee.this))
 	{
 	    goalPoint = new NdPoint(pt.getX(), pt.getY());
 	    angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, goalPoint);
 	}
 
-	space.moveByVector(this, 1, angle, 0);
+	space.moveByVector(Bee.this, 1, angle, 0);
 	// updating position in the grid
-	myPoint = space.getLocation(this);
-	getGrid().moveTo(this, (int) myPoint.getX(), (int) myPoint.getY());
+	myPoint = space.getLocation(Bee.this);
+	getGrid().moveTo(Bee.this, (int) myPoint.getX(), (int) myPoint.getY());
     }
 
     public void collectNectar(int beeCurrNectar, Flower flower)
     {
 	int flowerCurrNectar = flower.getCurrNectar();
-	if ((flowerCurrNectar - this.getCollectingSkill()) < 0)
+	if ((flowerCurrNectar - getCollectingSkill()) < 0)
 	    flower.setCurrNectar(0);
 	else
-	    flower.setCurrNectar(flowerCurrNectar - this.getCollectingSkill());
+	    flower.setCurrNectar(flowerCurrNectar - getCollectingSkill());
 
-	int newBeeNectar = beeCurrNectar + Math.min(flowerCurrNectar, this.getCollectingSkill());
-	this.setCurrentNectar(Math.min(newBeeNectar, 30));
+	int newBeeNectar = beeCurrNectar + Math.min(flowerCurrNectar, getCollectingSkill());
+	setCurrentNectar(Math.min(newBeeNectar, 30));
 	return;
     }
 
@@ -280,6 +287,28 @@ public class Bee extends Agent
 	    }
 	}
 	return remainingNectar;
+    }
+
+    private void checkSimulationOver()
+    {
+	for (Object obj : grid.getObjects())
+	{
+	    if (obj instanceof Bee)
+	    {
+		if (((Bee) obj).getIsAlive() )
+			//|| !((Bee) obj).getIsAtHive())
+		    return;
+	    }
+	}
+	RunEnvironment.getInstance().endRun();
+    }
+
+    public void killBee()
+    {
+	setIsAlive(false);
+	removeBehaviour(movement);
+	context.remove(this);
+	checkSimulationOver();
     }
 
     /*
