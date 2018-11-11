@@ -6,9 +6,7 @@ package beeSimulation;
 import java.util.ArrayList;
 import java.util.List;
 
-import beeSimulation.Bee.MyBeeBehaviour;
 import repast.simphony.context.Context;
-import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.query.space.grid.GridCell;
 import repast.simphony.query.space.grid.GridCellNgh;
 import repast.simphony.random.RandomHelper;
@@ -17,7 +15,6 @@ import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
-import repast.simphony.util.ContextUtils;
 import repast.simphony.util.SimUtilities;
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
@@ -133,7 +130,7 @@ public class Buzzer extends Agent
 		else
 		{
 		    // vespa vive e continua a sua vida
-		    System.out.println("Vespa vive apÃ³s luta com abelha forte");
+		    System.out.println("Vespa vive após luta com abelha forte");
 		}
 	    }
 	}

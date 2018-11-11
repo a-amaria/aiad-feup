@@ -1,6 +1,3 @@
-/**
- * 
- */
 package beeSimulation;
 
 import java.awt.geom.Point2D;
@@ -8,7 +5,6 @@ import java.util.List;
 
 import repast.simphony.context.Context;
 import repast.simphony.engine.environment.RunEnvironment;
-import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.query.space.grid.GridCell;
 import repast.simphony.query.space.grid.GridCellNgh;
 import repast.simphony.random.RandomHelper;
@@ -17,7 +13,6 @@ import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
-import repast.simphony.util.ContextUtils;
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
 
@@ -165,76 +160,13 @@ public class Bee extends Agent
 	public void action()
 	{
 	    GridPoint pt = getGrid().getLocation(Bee.this);
+
 	    if (getCurrentNectar() >= getMaxNectar() || (smellRemainingNectar() == 0))
-	    {
-		double minDist = Double.MAX_VALUE;
-		GridPoint closerHiveCell = null;
-		for (Hive hive : getHives())
-		{
-		    double dist = Point2D.distance(pt.getX(), pt.getY(), getGrid().getLocation(hive).getX(),
-			    getGrid().getLocation(hive).getY());
-		    if (dist < minDist)
-		    {
-			minDist = dist;
-			closerHiveCell = getGrid().getLocation(hive);
-		    }
-		}
-		moveTowards(closerHiveCell);
-		return;
-	    }
+		goToHive(pt);
+
 
 	    else if (getCurrentNectar() < getMaxNectar())
-	    {
-		GridCellNgh<Flower> nghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, getBeeSight(),
-			getBeeSight());
-
-		List<GridCell<Flower>> gridCells = nghCreator.getNeighborhood(true);
-		Flower flower = new Flower();
-		double max = getFlowerWithMostNectar().getCurrNectar();
-		for (GridCell<Flower> cell : gridCells)
-		{
-		    for (Object item : cell.items())
-		    {
-			if (item instanceof Flower)
-			{
-			    flower = (Flower) item;
-			    if (flower.getCurrNectar() > max)
-			    {
-				max = flower.getCurrNectar();
-				setCellWithMostNectar(cell);
-				setFlowerWithMostNectar((Flower) item);
-			    }
-			}
-		    }
-		}
-
-		if (getCellWithMostNectar() == null)
-		{
-		    moveTowards(null);
-		    return;
-		}
-		moveTowards(getCellWithMostNectar().getPoint());
-
-		pt = getGrid().getLocation(Bee.this);
-		GridCellNgh<Flower> closeNghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, 1, 1);
-		List<GridCell<Flower>> closeGridCells = closeNghCreator.getNeighborhood(true);
-		Boolean inNeighborhood = false;
-		for (GridCell<Flower> neighbor : closeGridCells)
-		{
-		    if (neighbor.getPoint().equals(getCellWithMostNectar().getPoint()))
-		    {
-			inNeighborhood = true;
-			break;
-		    }
-		}
-		if (getCellWithMostNectar() != null && inNeighborhood && getFlowerWithMostNectar().getCurrNectar() > 0
-			&& getCollectingSkill() > 0)
-		{
-		    collectNectar(getCurrentNectar(), getFlowerWithMostNectar());
-		    return;
-		}
-		System.out.println("Wont collect yet ");
-	    }
+		goLookForNectar(pt);
 	    return;
 	}
     }
@@ -276,6 +208,81 @@ public class Bee extends Agent
 	return;
     }
 
+    public void goLookForNectar(GridPoint pt)
+    {
+	// move towards flower with most nectar
+	GridCellNgh<Flower> nghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, getBeeSight(),
+		getBeeSight());
+
+	List<GridCell<Flower>> gridCells = nghCreator.getNeighborhood(true);
+	Flower flower = new Flower();
+	double max = getFlowerWithMostNectar().getCurrNectar();
+	for (GridCell<Flower> cell : gridCells)
+	{
+	    for (Object item : cell.items())
+	    {
+		if (item instanceof Flower)
+		{
+		    flower = (Flower) item;
+		    if (flower.getCurrNectar() > max)
+		    {
+			max = flower.getCurrNectar();
+			setCellWithMostNectar(cell);
+			setFlowerWithMostNectar((Flower) item);
+		    }
+		}
+	    }
+	}
+
+	if (getCellWithMostNectar() == null)
+	{
+	    moveTowards(null);
+	    return;
+	}
+	moveTowards(getCellWithMostNectar().getPoint());
+
+	// get the flower's neighbourhood
+	pt = getGrid().getLocation(Bee.this);
+	GridCellNgh<Flower> closeNghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, 1, 1);
+	List<GridCell<Flower>> closeGridCells = closeNghCreator.getNeighborhood(true);
+	Boolean inNeighborhood = false;
+	for (GridCell<Flower> neighbor : closeGridCells)
+	{
+	    if (neighbor.getPoint().equals(getCellWithMostNectar().getPoint()))
+	    {
+		inNeighborhood = true;
+		break;
+	    }
+	}
+
+	// if bee's in the flower neighbourhood etc, collect nectar
+	if (getCellWithMostNectar() != null && inNeighborhood && getFlowerWithMostNectar().getCurrNectar() > 0
+		&& getCollectingSkill() > 0)
+	{
+	    collectNectar(getCurrentNectar(), getFlowerWithMostNectar());
+	    return;
+	}
+	return;
+    }
+
+    public void goToHive(GridPoint pt)
+    {
+	double minDist = Double.MAX_VALUE;
+	GridPoint closerHiveCell = null;
+	for (Hive hive : getHives())
+	{
+	    double dist = Point2D.distance(pt.getX(), pt.getY(), getGrid().getLocation(hive).getX(),
+		    getGrid().getLocation(hive).getY());
+	    if (dist < minDist)
+	    {
+		minDist = dist;
+		closerHiveCell = getGrid().getLocation(hive);
+	    }
+	}
+	moveTowards(closerHiveCell);
+	return;
+    }
+
     public int smellRemainingNectar()
     {
 	int remainingNectar = 0;
@@ -296,7 +303,7 @@ public class Bee extends Agent
 	    if (obj instanceof Bee)
 	    {
 		if (((Bee) obj).getIsAlive() )
-			//|| !((Bee) obj).getIsAtHive())
+		    //|| !((Bee) obj).getIsAtHive())
 		    return;
 	    }
 	}
