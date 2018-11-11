@@ -25,18 +25,99 @@ public class Buzzer extends Agent
     private Grid<Object> grid;
     private Context<Object> context;
     private MyBuzzerBehaviour movement;
+    private boolean isAlive;
 
     public Buzzer(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context)
     {
 	this.space = space;
 	this.grid = grid;
 	this.context = context;
+	this.isAlive=true;
+    }
+    
+    public boolean getIsAlive()
+    {
+	return isAlive;
+    }
+
+    public void setIsAlive(boolean state)
+    {
+	this.isAlive = state;
     }
 
     public void setup()
     {
 	movement = new MyBuzzerBehaviour(this);
 	addBehaviour(movement);
+    }
+
+    public void moveTowards(GridPoint pointWithMostBees)
+    {
+	double angle;
+	NdPoint myPoint = space.getLocation(this);
+
+	if (pointWithMostBees == null)
+	{
+	    NdPoint goalPoint = new NdPoint(RandomHelper.nextIntFromTo(0, 50), RandomHelper.nextIntFromTo(0, 50));
+	    angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, goalPoint);
+	    space.moveByVector(Buzzer.this, 1, angle, 0);
+	    myPoint = space.getLocation(Buzzer.this);
+	    grid.moveTo(Buzzer.this, (int) myPoint.getX(), (int) myPoint.getY());
+	    return;
+	}
+
+	if (!pointWithMostBees.equals(grid.getLocation(this)))
+	{
+	    NdPoint otherPoint = new NdPoint(pointWithMostBees.getX(), pointWithMostBees.getY());
+	    angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, otherPoint);
+	    space.moveByVector(Buzzer.this, 1, angle, 0);
+	    myPoint = space.getLocation(Buzzer.this);
+	    grid.moveTo(Buzzer.this, (int) myPoint.getX(), (int) myPoint.getY());
+	    return;
+	}
+    }
+
+    public void killBuzzer()
+    {
+	setIsAlive(false);
+	removeBehaviour(movement);
+	context.remove(this);
+    }
+
+    public void catchBees()
+    {
+	GridPoint pt = grid.getLocation(this);
+	List<Object> bees = new ArrayList<Object>();
+	GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 1, 1);
+	List<GridCell<Bee>> gridCells = nghCreator.getNeighborhood(true);
+
+	for (GridCell<Bee> cell : gridCells)
+	{
+	    for (Object item : cell.items())
+	    {
+		if (item instanceof Bee)
+		{
+		    bees.add(item);
+		}
+	    }
+	}
+
+	if (bees.size() > 0)
+	{
+	    int index = RandomHelper.nextIntFromTo(0, bees.size() - 1);
+	    Bee b = (Bee) bees.get(index);
+	    int beeSurvival = 6 * b.getFightingSkill();
+	    int buzzerSurvival = RandomHelper.nextIntFromTo(0, 100);
+	    if (beeSurvival > buzzerSurvival)
+	    {
+		// vespa morre
+		killBuzzer();
+	    }
+	    else
+	    {
+		b.killBeel();
+	    }
+	}
     }
 
     class MyBuzzerBehaviour extends CyclicBehaviour
@@ -53,86 +134,23 @@ public class Buzzer extends Agent
 	{
 
 	    GridPoint pt = grid.getLocation(Buzzer.this);
-	    GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 1, 1);
+	    GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 4, 4);
 	    List<GridCell<Bee>> gridCells = nghCreator.getNeighborhood(true);
 	    SimUtilities.shuffle(gridCells, RandomHelper.getUniform());
 
-	    GridPoint pointWithLeastBees = null;
-	    int minCount = Integer.MAX_VALUE;
+	    GridPoint pointWithMostBees = null;
+	    int maxCount = Integer.MIN_VALUE;
 
 	    for (GridCell<Bee> cell : gridCells)
 	    {
-		if (cell.size() < minCount)
+		if (cell.size() > maxCount)
 		{
-		    pointWithLeastBees = cell.getPoint();
-		    minCount = cell.size();
+		    pointWithMostBees = cell.getPoint();
+		    maxCount = cell.size();
 		}
 	    }
-	    moveTowards(pointWithLeastBees);
-	}
-    }
-
-    public void moveTowards(GridPoint pt)
-    {
-	if (!pt.equals(grid.getLocation(Buzzer.this)))
-	{
-	    NdPoint myPoint = space.getLocation(Buzzer.this);
-	    NdPoint otherPoint = new NdPoint(pt.getX(), pt.getY());
-	    double angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, otherPoint);
-
-	    space.moveByVector(Buzzer.this, 2, angle, 0);
-	    myPoint = space.getLocation(Buzzer.this);
-	    grid.moveTo(Buzzer.this, (int) myPoint.getX(), (int) myPoint.getY());
+	    moveTowards(pointWithMostBees);
 	    catchBees();
-	}
-    }
-
-    public void killBuzzer()
-    {
-	removeBehaviour(movement);
-	context.remove(this);
-    }
-
-    public void catchBees()
-    {
-	GridPoint pt = grid.getLocation(Buzzer.this);
-	List<Object> bees = new ArrayList<Object>();
-
-	for (Object obj : grid.getObjectsAt(pt.getX(), pt.getY()))
-	{
-	    if (obj instanceof Bee)
-	    {
-		bees.add(obj);
-	    }
-	}
-	if (bees.size() > 0)
-	{
-	    int index = RandomHelper.nextIntFromTo(0, bees.size() - 1);
-	    Object bee = bees.get(index);
-
-	    Bee b = (Bee) bees.get(index);
-	    if (b.getFightingSkill() < 10)
-	    {
-		// Abelha tem de fugir ou entao morre
-		b.killBee();
-	    }
-	    else
-	    {
-		// probabilidade da vespa sobreviver ---> numero random entre 0 e
-		// fightingskill*9
-		// Se for > 15 vive, senao morre (aleatorio)
-		int probability = RandomHelper.nextIntFromTo(0, b.getFightingSkill() * 6);
-		if (probability < 15)
-		{
-		    // vespa morre
-		    killBuzzer();
-		}
-		else
-		{
-		    // vespa vive e continua a sua vida
-		    System.out.println("Vespa vive após luta com abelha forte");
-		}
-	    }
 	}
     }
 }

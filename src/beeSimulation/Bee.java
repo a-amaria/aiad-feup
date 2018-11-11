@@ -1,8 +1,12 @@
 package beeSimulation;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.List;
 
+import jade.core.AID;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import repast.simphony.context.Context;
 import repast.simphony.engine.environment.RunEnvironment;
 import repast.simphony.query.space.grid.GridCell;
@@ -11,10 +15,13 @@ import repast.simphony.random.RandomHelper;
 import repast.simphony.space.SpatialMath;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.NdPoint;
+import repast.simphony.space.graph.Network;
+import repast.simphony.space.graph.RepastEdge;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
+import sajas.core.behaviours.OneShotBehaviour;
 
 public class Bee extends Agent
 {
@@ -27,22 +34,31 @@ public class Bee extends Agent
     private int maxNectar;
     private int communicationRadius;
     private boolean isAlive;
+    private boolean isAtHive;
     private int beeSight;
     private List<Hive> hives;
     private GridCell<Flower> cellWithMostNectar;
     private Flower flowerWithMostNectar;
     private Context<Object> context;
     private MyBeeBehaviour movement;
+    private MyBeeInDangerBehaviour danger;
+    private MyReceiveCommunicationsBehaviour receiveCommunications;
+    private AID rescuer;
+    private int agreedCount;
+    private Buzzer targetBuzzer;
+    private RepastEdge<Object> murderEdge;
 
     public Bee(ContinuousSpace<Object> space, Grid<Object> grid, int communicationRadius, int beeSight,
-	    List<Hive> hives, Context<Object> context)
+	    List<Hive> hives, Context<Object> context, int max)
     {
 	this.space = space;
 	this.grid = grid;
 	this.fightingSkill = RandomHelper.nextIntFromTo(0, 10);
 	this.collectingSkill = 10 - this.fightingSkill;
+	if(this.collectingSkill==0)
+	    this.collectingSkill++;
 	this.currentNectar = 0;
-	this.maxNectar = 30;
+	this.maxNectar = max;
 	this.communicationRadius = communicationRadius;
 	this.isAlive = true;
 	this.beeSight = beeSight;
@@ -50,6 +66,13 @@ public class Bee extends Agent
 	this.cellWithMostNectar = null;
 	this.flowerWithMostNectar = new Flower();
 	this.context = context;
+	this.rescuer = null;
+	this.targetBuzzer = null;
+	this.agreedCount = 0;
+    }
+
+    public Bee()
+    {
     }
 
     /********************** GETTERS *************************/
@@ -62,6 +85,11 @@ public class Bee extends Agent
     public Grid<Object> getGrid()
     {
 	return grid;
+    }
+
+    public void incrementAgreed()
+    {
+	agreedCount++;
     }
 
     public int getFightingSkill()
@@ -97,6 +125,16 @@ public class Bee extends Agent
     public void setIsAlive(boolean state)
     {
 	this.isAlive = state;
+    }
+
+    public void setIsAtHive(boolean state)
+    {
+	this.isAtHive = state;
+    }
+
+    public boolean getIsAtHive()
+    {
+	return isAtHive;
     }
 
     public int getBeeSight()
@@ -139,12 +177,26 @@ public class Bee extends Agent
 	this.flowerWithMostNectar = flowerWithMostNectar;
     }
 
+    public AID getRescuer()
+    {
+	return rescuer;
+    }
+
+    public void setRescuer(AID rescuer)
+    {
+	this.rescuer = rescuer;
+    }
+
     /********************** GETTERS END *************************/
+
+    /************* AGENTS SETUP AND BEHAVIOURS *****************/
 
     public void setup()
     {
 	movement = new MyBeeBehaviour(this);
+	receiveCommunications = new MyReceiveCommunicationsBehaviour(this);
 	addBehaviour(movement);
+	addBehaviour(receiveCommunications);
     }
 
     class MyBeeBehaviour extends CyclicBehaviour
@@ -159,16 +211,198 @@ public class Bee extends Agent
 	@Override
 	public void action()
 	{
+
 	    GridPoint pt = getGrid().getLocation(Bee.this);
+	    if (pursueBuzzer(pt))
+		return;
+	    try
+	    {
+		if (getCurrentNectar() >= getMaxNectar() || (smellRemainingNectar() == 0))
+		    goToHive(pt);
 
-	    if (getCurrentNectar() >= getMaxNectar() || (smellRemainingNectar() == 0))
-		goToHive(pt);
+		else if (getCurrentNectar() < getMaxNectar())
+		    goLookForNectar(pt);
 
+		Buzzer dangerousBuzz = dangerousBuzzer();
+		if (dangerousBuzz != null && Bee.this.getFightingSkill() < 6)
+		    addBehaviour(new MyBeeInDangerBehaviour(Bee.this, dangerousBuzz));
 
-	    else if (getCurrentNectar() < getMaxNectar())
-		goLookForNectar(pt);
-	    return;
+	    } catch (NullPointerException exception)
+	    {
+		exception.printStackTrace();
+	    }
 	}
+    }
+
+    class MyBeeInDangerBehaviour extends OneShotBehaviour
+    {
+	private static final long serialVersionUID = 1L;
+	Buzzer dangerousBuzz;
+
+	public MyBeeInDangerBehaviour(Agent a, Buzzer buu)
+	{
+	    super(a);
+	    dangerousBuzz = buu;
+	}
+
+	public void sendDistressMessage()
+	{
+	    GridPoint pt = getGrid().getLocation(Bee.this);
+	    try
+	    {
+		GridCellNgh<Bee> closeNghCreator = new GridCellNgh<Bee>(getGrid(), pt, Bee.class,
+			getCommunicationRadius(), getCommunicationRadius());
+		List<GridCell<Bee>> closeGridCells = closeNghCreator.getNeighborhood(true);
+
+		ACLMessage rfh = new ACLMessage(ACLMessage.REQUEST);
+		MessageTemplate mt;
+
+		List<AID> fighterBees = new ArrayList<AID>();
+
+		for (GridCell<Bee> cell : closeGridCells)
+		{
+		    for (Object item : cell.items())
+		    {
+			if (item instanceof Bee && ((Bee) item).getFightingSkill() > 5)
+			{
+			    AID thisBeeAID = ((Bee) item).getAID();
+			    fighterBees.add(thisBeeAID);
+			    rfh.addReceiver(thisBeeAID);
+			}
+		    }
+		}
+
+		rfh.setContent(dangerousBuzz.getAID().toString());
+		rfh.setConversationId("danger");
+		rfh.setReplyWith("rfh" + System.currentTimeMillis()); // Unique value
+		System.out.println("Sending RFH danger messages");
+		getAgent().send(rfh);
+	    } catch (NullPointerException exception)
+	    {
+		exception.printStackTrace();
+	    }
+
+	}
+
+	@Override
+	public void action()
+	{
+	    sendDistressMessage();
+	}
+    }
+
+    class MyReceiveCommunicationsBehaviour extends CyclicBehaviour
+    {
+	private static final long serialVersionUID = 1L;
+
+	public MyReceiveCommunicationsBehaviour(Agent a)
+	{
+	    super(a);
+	}
+
+	public void receiveRequestsForHelp()
+	{
+
+	    ACLMessage msg = myAgent.receive();
+	    boolean done = false;
+	    if (msg != null)
+	    {
+		if (msg.getPerformative() == ACLMessage.AGREE)
+		{
+		    setRescuer(msg.getSender());
+		    incrementAgreed();
+		}
+		if (msg.getPerformative() == ACLMessage.REQUEST)
+		{
+		    // Message received. Process it
+		    String dangerousBuzzerAID = msg.getContent();
+		    ACLMessage reply = msg.createReply();
+
+		    if (targetBuzzer != null)
+		    {
+			reply.setPerformative(ACLMessage.REFUSE);
+		    }
+		    else
+		    {
+			reply.setPerformative(ACLMessage.AGREE);
+			targetBuzzer = (Buzzer) lookupAgent(dangerousBuzzerAID);
+			if (targetBuzzer != null)
+			    murderEdge = ((Network<Object>) context.getProjection("Killbeel Network")).addEdge(myAgent,
+				    targetBuzzer);
+		    }
+		}
+
+	    }
+	}
+
+	@Override
+	public void action()
+	{
+	    receiveRequestsForHelp();
+	}
+
+    }
+
+    public boolean pursueBuzzer(GridPoint pt)
+    {
+	try
+	{
+	    if (!targetBuzzer.getIsAlive())
+	    {
+		targetBuzzer = null;
+		moveTowards(null);
+		return true;
+	    }
+	    else
+	    {
+		GridPoint buzzerPoint = grid.getLocation(targetBuzzer);
+		if (buzzerPoint.equals(pt))
+		{
+		    targetBuzzer = null;
+		    removeMurderEdge();
+		    moveTowards(null);
+		    return true;
+		}
+		moveTowards(buzzerPoint);
+		return true;
+	    }
+	} catch (NullPointerException expt)
+	{
+	    removeMurderEdge();
+	    return false;
+	}
+    }
+
+    public Buzzer dangerousBuzzer()
+    {
+	GridPoint pt = getGrid().getLocation(Bee.this);
+	Buzzer closeBuzzer = null;
+	GridCellNgh<Buzzer> closeNghCreator = new GridCellNgh<Buzzer>(getGrid(), pt, Buzzer.class, 4, 4);
+	List<GridCell<Buzzer>> closeGridCells = closeNghCreator.getNeighborhood(true);
+	for (GridCell<Buzzer> cell : closeGridCells)
+	{
+	    for (Object item : cell.items())
+	    {
+		if (item instanceof Buzzer)
+		{
+		    closeBuzzer = (Buzzer) item;
+		    break;
+		}
+	    }
+	}
+	return closeBuzzer;
+    }
+
+    public Agent lookupAgent(String aid)
+    {
+	for (Object obj : context.getObjects(Agent.class))
+	{
+	    if (((Agent) obj).getAID().toString().equals(aid))
+	    {
+		return (Agent) obj;
+	    }
+	}
+	return null;
     }
 
     public void moveTowards(GridPoint pt)
@@ -245,18 +479,18 @@ public class Bee extends Agent
 	pt = getGrid().getLocation(Bee.this);
 	GridCellNgh<Flower> closeNghCreator = new GridCellNgh<Flower>(getGrid(), pt, Flower.class, 1, 1);
 	List<GridCell<Flower>> closeGridCells = closeNghCreator.getNeighborhood(true);
-	Boolean inNeighborhood = false;
-	for (GridCell<Flower> neighbor : closeGridCells)
+	Boolean inNeighbourhood = false;
+	for (GridCell<Flower> neighbour : closeGridCells)
 	{
-	    if (neighbor.getPoint().equals(getCellWithMostNectar().getPoint()))
+	    if (neighbour.getPoint().equals(getCellWithMostNectar().getPoint()))
 	    {
-		inNeighborhood = true;
+		inNeighbourhood = true;
 		break;
 	    }
 	}
 
 	// if bee's in the flower neighbourhood etc, collect nectar
-	if (getCellWithMostNectar() != null && inNeighborhood && getFlowerWithMostNectar().getCurrNectar() > 0
+	if (getCellWithMostNectar() != null && inNeighbourhood && getFlowerWithMostNectar().getCurrNectar() > 0
 		&& getCollectingSkill() > 0)
 	{
 	    collectNectar(getCurrentNectar(), getFlowerWithMostNectar());
@@ -280,7 +514,27 @@ public class Bee extends Agent
 	    }
 	}
 	moveTowards(closerHiveCell);
-	return;
+
+	pt = grid.getLocation(this);
+	GridCellNgh<Hive> closeNghCreator = new GridCellNgh<Hive>(getGrid(), pt, Hive.class, 1, 1);
+	List<GridCell<Hive>> closeGridCells = closeNghCreator.getNeighborhood(true);
+
+	for (GridCell<Hive> neighbour : closeGridCells)
+	{
+	    if (neighbour.getPoint().equals(closerHiveCell))
+	    {
+		for (Object item : neighbour.items())
+		{
+		    if (item instanceof Hive)
+		    {
+			((Hive) item).incrementHiveStats(getCurrentNectar());
+			enterFlashilyInHive();
+			return;
+		    }
+		}
+
+	    }
+	}
     }
 
     public int smellRemainingNectar()
@@ -302,36 +556,36 @@ public class Bee extends Agent
 	{
 	    if (obj instanceof Bee)
 	    {
-		if (((Bee) obj).getIsAlive() )
-		    //|| !((Bee) obj).getIsAtHive())
+		if (((Bee) obj).getIsAlive() || !((Bee) obj).getIsAtHive())
 		    return;
 	    }
 	}
 	RunEnvironment.getInstance().endRun();
     }
 
-    public void killBee()
+    public void killBeel()
     {
 	setIsAlive(false);
+	removeMurderEdge();
 	removeBehaviour(movement);
+	removeBehaviour(receiveCommunications);
 	context.remove(this);
 	checkSimulationOver();
     }
 
-    /*
-     * public void messageBees(GridPoint flowerPoint, Flower flower, String type,
-     * int commRadius) // danger or flower with // a lot of nectar { if
-     * (flower.getCurrNectar() > 0) { GridPoint myCurrLocation =
-     * grid.getLocation(this); List<Object> flowers = new ArrayList<Object>(); for
-     * (Object obj : grid.getObjectsAt(myCurrLocation.getX(),
-     * myCurrLocation.getY())) { if (obj instanceof Flower) flowers.add(obj); } }
-     * return; } // separar em duas diferentes?
-     * 
-     * public void actionAfterRecMsg() { // no caso da luta - se calhar as q
-     * chegaram deviam ir comunicando q ja chegaram // ate chegar a um certo numero,
-     * e // caso ja tenham ido muitas n vai // no caso do mel - mais complexo,
-     * avaliar as cargas das q estao mais perto e a // quantidade de nectar q tem
-     * nas flores da zona (looool)}
-     */
+    public void enterFlashilyInHive()
+    {
+	setIsAtHive(true);
+	removeMurderEdge();
+	removeBehaviour(movement);
+	removeBehaviour(receiveCommunications);
+	context.remove(this);
+	checkSimulationOver();
+    }
 
+    public void removeMurderEdge()
+    {
+	if (murderEdge != null)
+	    ((Network<Object>) context.getProjection("Killbeel Network")).removeEdge(murderEdge);
+    }
 }

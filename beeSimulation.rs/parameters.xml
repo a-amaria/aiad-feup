@@ -21,6 +21,9 @@
 	<parameter name="bee_sight" displayName="Bee Sight"
 		type="int" defaultValue="50" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+	<parameter name="max_capacity" displayName="Bee Maximum Capacity"
+		type="int" defaultValue="30" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 </parameters>
 
 

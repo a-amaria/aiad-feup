@@ -74,10 +74,11 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	int hiveCount = params.getInteger("hive_count");
 	int buzzerCount = params.getInteger("buzzer_count");
 	int beeSight = params.getInteger("bee_sight");
+	int maxCapacity = params.getInteger("max_capacity");
 	
 	spawnFlowers(space, grid, context, flowerCount);
-	spawnHives(space, grid, context, hiveCount);
-	spawnBees(space, grid, context, communicationRadius, beeSight, beeCount);
+	spawnHives(hiveCount);
+	spawnBees(space, grid, context, communicationRadius, beeSight, beeCount, maxCapacity);
 	spawnBuzzers(space, grid, context, buzzerCount);
     }
 
@@ -92,12 +93,12 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	}
     }
 
-    private void spawnHives(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context, int hiveCount)
+    private void spawnHives(int hiveCount)
     {
 	hives = new ArrayList<>();
 	for (int i = 0; i < hiveCount; i++)
 	{
-	    Hive newHive = new Hive(space, grid, context);
+	    Hive newHive = new Hive();
 	    context.add(newHive);
 	    NdPoint hivePt = space.getLocation(newHive);
 	    grid.moveTo(newHive, (int) hivePt.getX(), (int) hivePt.getY());
@@ -107,11 +108,11 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
     }
 
     private void spawnBees(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context,
-	    int communicationRadius, int beeSight,int beeCount)
+	    int communicationRadius, int beeSight,int beeCount, int maxCapacity)
     {
 	for (int i = 0; i < beeCount; i++)
 	{
-	    Bee newBee = new Bee(space, grid, communicationRadius, beeSight, hives, context);
+	    Bee newBee = new Bee(space, grid, communicationRadius, beeSight, hives, context, maxCapacity);
 	    context.add(newBee);
 	    NdPoint beePt = space.getLocation(newBee);
 	    grid.moveTo(newBee, (int) beePt.getX(), (int) beePt.getY());
@@ -160,6 +161,8 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	Grid<Object> grid = gridFactory.createGrid("grid", context, new GridBuilderParameters<Object>(
 		new WrapAroundBorders(), new SimpleGridAdder<Object>(), true, 50, 50));
 	
+	NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("Killbeel Network", context , true );
+	netBuilder.buildNetwork();
 	this.grid = grid;
 	this.space = space;
 	this.context = context;
