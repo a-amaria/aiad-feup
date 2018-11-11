@@ -6,6 +6,7 @@ package beeSimulation;
 import java.util.ArrayList;
 import java.util.List;
 
+import beeSimulation.Bee.MyBeeBehaviour;
 import repast.simphony.context.Context;
 import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.query.space.grid.GridCell;
@@ -18,58 +19,86 @@ import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridPoint;
 import repast.simphony.util.ContextUtils;
 import repast.simphony.util.SimUtilities;
+import sajas.core.Agent;
+import sajas.core.behaviours.CyclicBehaviour;
 
-public class Buzzer
+public class Buzzer extends Agent
 {
     private ContinuousSpace<Object> space;
     private Grid<Object> grid;
+    private Context<Object> context;
+    private MyBuzzerBehaviour movement;
 
-    public Buzzer(ContinuousSpace<Object> space, Grid<Object> grid)
+    public Buzzer(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context)
     {
 	this.space = space;
 	this.grid = grid;
+	this.context = context;
     }
 
-    @ScheduledMethod(start = 1, interval = 1)
-    public void run()
+    public void setup()
     {
-	GridPoint pt = grid.getLocation(this);
-	GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 1, 1);
-	List<GridCell<Bee>> gridCells = nghCreator.getNeighborhood(true);
-	SimUtilities.shuffle(gridCells, RandomHelper.getUniform());
+	movement = new MyBuzzerBehaviour(this);
+	addBehaviour(movement);
+    }
 
-	GridPoint pointWithLeastBees = null;
-	int minCount = Integer.MAX_VALUE;
+    class MyBuzzerBehaviour extends CyclicBehaviour
+    {
+	private static final long serialVersionUID = 1L;
 
-	for (GridCell<Bee> cell : gridCells)
+	public MyBuzzerBehaviour(Agent a)
 	{
-	    if (cell.size() < minCount)
-	    {
-		pointWithLeastBees = cell.getPoint();
-		minCount = cell.size();
-	    }
+	    super(a);
 	}
-	moveTowards(pointWithLeastBees);
+
+	@Override
+	public void action()
+	{
+
+	    GridPoint pt = grid.getLocation(Buzzer.this);
+	    GridCellNgh<Bee> nghCreator = new GridCellNgh<Bee>(grid, pt, Bee.class, 1, 1);
+	    List<GridCell<Bee>> gridCells = nghCreator.getNeighborhood(true);
+	    SimUtilities.shuffle(gridCells, RandomHelper.getUniform());
+
+	    GridPoint pointWithLeastBees = null;
+	    int minCount = Integer.MAX_VALUE;
+
+	    for (GridCell<Bee> cell : gridCells)
+	    {
+		if (cell.size() < minCount)
+		{
+		    pointWithLeastBees = cell.getPoint();
+		    minCount = cell.size();
+		}
+	    }
+	    moveTowards(pointWithLeastBees);
+	}
     }
 
     public void moveTowards(GridPoint pt)
     {
-	if (!pt.equals(grid.getLocation(this)))
+	if (!pt.equals(grid.getLocation(Buzzer.this)))
 	{
-	    NdPoint myPoint = space.getLocation(this);
+	    NdPoint myPoint = space.getLocation(Buzzer.this);
 	    NdPoint otherPoint = new NdPoint(pt.getX(), pt.getY());
 	    double angle = SpatialMath.calcAngleFor2DMovement(space, myPoint, otherPoint);
 
-	    space.moveByVector(this, 2, angle, 0);
-	    myPoint = space.getLocation(this);
-	    grid.moveTo(this, (int) myPoint.getX(), (int) myPoint.getY());
+	    space.moveByVector(Buzzer.this, 2, angle, 0);
+	    myPoint = space.getLocation(Buzzer.this);
+	    grid.moveTo(Buzzer.this, (int) myPoint.getX(), (int) myPoint.getY());
 	    catchBees();
 	}
     }
 
+    public void killBuzzer()
+    {
+	removeBehaviour(movement);
+	context.remove(this);
+    }
+
     public void catchBees()
     {
-	GridPoint pt = grid.getLocation(this);
+	GridPoint pt = grid.getLocation(Buzzer.this);
 	List<Object> bees = new ArrayList<Object>();
 
 	for (Object obj : grid.getObjectsAt(pt.getX(), pt.getY()))
@@ -86,11 +115,9 @@ public class Buzzer
 
 	    Bee b = (Bee) bees.get(index);
 	    if (b.getFightingSkill() < 10)
-	    { // Abelha tem de fugir ou entao morre
-		System.out.println("Abelha morre após luta com vespa forte.. ou foge?");
-		NdPoint spacePt = space.getLocation(bee);
-		Context<Object> context = ContextUtils.getContext(bee);
-		context.remove(bee);
+	    {
+		// Abelha tem de fugir ou entao morre
+		b.killBee();
 	    }
 	    else
 	    {
@@ -101,10 +128,7 @@ public class Buzzer
 		if (probability < 15)
 		{
 		    // vespa morre
-		    System.out.println("Vespa morre após luta com abelha forte");
-		    NdPoint spacePt = space.getLocation(this);
-		    Context<Object> context = ContextUtils.getContext(this);
-		    context.remove(this);
+		    killBuzzer();
 		}
 		else
 		{
