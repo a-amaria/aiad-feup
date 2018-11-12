@@ -55,7 +55,7 @@ public class Bee extends Agent
 	this.grid = grid;
 	this.fightingSkill = RandomHelper.nextIntFromTo(0, 10);
 	this.collectingSkill = 10 - this.fightingSkill;
-	if(this.collectingSkill==0)
+	if (this.collectingSkill == 0)
 	    this.collectingSkill++;
 	this.currentNectar = 0;
 	this.maxNectar = max;
@@ -90,6 +90,11 @@ public class Bee extends Agent
     public void incrementAgreed()
     {
 	agreedCount++;
+    }
+
+    public int getAgreedCount()
+    {
+	return agreedCount;
     }
 
     public int getFightingSkill()
@@ -327,8 +332,12 @@ public class Bee extends Agent
 			reply.setPerformative(ACLMessage.AGREE);
 			targetBuzzer = (Buzzer) lookupAgent(dangerousBuzzerAID);
 			if (targetBuzzer != null)
+			{
+			    incrementAgreed();
 			    murderEdge = ((Network<Object>) context.getProjection("Killbeel Network")).addEdge(myAgent,
 				    targetBuzzer);
+			}
+
 		    }
 		}
 
@@ -350,8 +359,7 @@ public class Bee extends Agent
 	    if (!targetBuzzer.getIsAlive())
 	    {
 		targetBuzzer = null;
-		moveTowards(null);
-		return true;
+		return false;
 	    }
 	    else
 	    {
@@ -360,8 +368,7 @@ public class Bee extends Agent
 		{
 		    targetBuzzer = null;
 		    removeMurderEdge();
-		    moveTowards(null);
-		    return true;
+		    return false;
 		}
 		moveTowards(buzzerPoint);
 		return true;
@@ -377,7 +384,7 @@ public class Bee extends Agent
     {
 	GridPoint pt = getGrid().getLocation(Bee.this);
 	Buzzer closeBuzzer = null;
-	GridCellNgh<Buzzer> closeNghCreator = new GridCellNgh<Buzzer>(getGrid(), pt, Buzzer.class, 4, 4);
+	GridCellNgh<Buzzer> closeNghCreator = new GridCellNgh<Buzzer>(getGrid(), pt, Buzzer.class, 7, 7);
 	List<GridCell<Buzzer>> closeGridCells = closeNghCreator.getNeighborhood(true);
 	for (GridCell<Buzzer> cell : closeGridCells)
 	{
@@ -565,6 +572,8 @@ public class Bee extends Agent
 
     public void killBeel()
     {
+	if(isAtHive)
+	    return;
 	setIsAlive(false);
 	removeMurderEdge();
 	removeBehaviour(movement);
@@ -575,6 +584,8 @@ public class Bee extends Agent
 
     public void enterFlashilyInHive()
     {
+	if(!isAlive)
+	    return;
 	setIsAtHive(true);
 	removeMurderEdge();
 	removeBehaviour(movement);

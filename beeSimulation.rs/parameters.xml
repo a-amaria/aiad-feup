@@ -4,7 +4,7 @@
 		type="int" defaultValue="__NULL__" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	<parameter name="bee_count" displayName="Bee Count" type="int"
-		defaultValue="1" isReadOnly="false"
+		defaultValue="20" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	<parameter name="flower_count" displayName="Flower Count"
 		type="int" defaultValue="10" isReadOnly="false"
@@ -16,10 +16,10 @@
 		defaultValue="1" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	<parameter name="buzzer_count" displayName="Buzzer Count"
-		type="int" defaultValue="0" isReadOnly="false"
+		type="int" defaultValue="5" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	<parameter name="bee_sight" displayName="Bee Sight"
-		type="int" defaultValue="50" isReadOnly="false"
+		type="int" defaultValue="15" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	<parameter name="max_capacity" displayName="Bee Maximum Capacity"
 		type="int" defaultValue="30" isReadOnly="false"
