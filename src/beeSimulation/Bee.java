@@ -384,7 +384,7 @@ public class Bee extends Agent
     {
 	GridPoint pt = getGrid().getLocation(Bee.this);
 	Buzzer closeBuzzer = null;
-	GridCellNgh<Buzzer> closeNghCreator = new GridCellNgh<Buzzer>(getGrid(), pt, Buzzer.class, 7, 7);
+	GridCellNgh<Buzzer> closeNghCreator = new GridCellNgh<Buzzer>(getGrid(), pt, Buzzer.class, 5, 5);
 	List<GridCell<Buzzer>> closeGridCells = closeNghCreator.getNeighborhood(true);
 	for (GridCell<Buzzer> cell : closeGridCells)
 	{

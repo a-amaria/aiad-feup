@@ -37,6 +37,7 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
     private Grid<Object> grid;
     private ContinuousSpace<Object> space;
     List<Hive> hives;
+    int initNectar = 0;
 
     public static Agent getAgent(Context<?> context, AID aid)
     {
@@ -77,7 +78,7 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	int maxCapacity = params.getInteger("max_capacity");
 	
 	spawnFlowers(space, grid, context, flowerCount);
-	spawnHives(hiveCount);
+	spawnHives(hiveCount, grid, initNectar);
 	spawnBees(space, grid, context, communicationRadius, beeSight, beeCount, maxCapacity);
 	spawnBuzzers(space, grid, context, buzzerCount);
     }
@@ -90,15 +91,16 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	    context.add(newFlower);
 	    NdPoint flowerPt = space.getLocation(newFlower);
 	    grid.moveTo(newFlower, (int) flowerPt.getX(), (int) flowerPt.getY());
+	    initNectar+=newFlower.getCurrNectar();
 	}
     }
 
-    private void spawnHives(int hiveCount)
+    private void spawnHives(int hiveCount, Grid<Object> grid, int initNectar)
     {
 	hives = new ArrayList<>();
 	for (int i = 0; i < hiveCount; i++)
 	{
-	    Hive newHive = new Hive();
+	    Hive newHive = new Hive(grid, initNectar);
 	    context.add(newHive);
 	    NdPoint hivePt = space.getLocation(newHive);
 	    grid.moveTo(newHive, (int) hivePt.getX(), (int) hivePt.getY());
