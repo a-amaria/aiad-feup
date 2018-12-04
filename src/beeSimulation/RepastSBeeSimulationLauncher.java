@@ -38,6 +38,10 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
     private ContinuousSpace<Object> space;
     List<Hive> hives;
     int initNectar = 0;
+    int maxHoneyAllBees = 0;
+    int nrFighters = 0;
+    int nrCollectors = 0;
+    double ratioFighterCollector = 0.0;
 
     public static Agent getAgent(Context<?> context, AID aid)
     {
@@ -80,11 +84,13 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	spawnFlowers(space, grid, context, flowerCount);
 	spawnHives(hiveCount, grid, initNectar);
 	spawnBees(space, grid, context, communicationRadius, beeSight, beeCount, maxCapacity);
+	spawnStats(maxHoneyAllBees, ratioFighterCollector, initNectar);
 	spawnBuzzers(space, grid, context, buzzerCount);
     }
 
     private void spawnFlowers(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context, int flowerCount)
     {
+	initNectar = 0;
 	for (int i = 0; i < flowerCount; i++)
 	{
 	    Flower newFlower = new Flower(space, grid, context);
@@ -93,6 +99,40 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	    grid.moveTo(newFlower, (int) flowerPt.getX(), (int) flowerPt.getY());
 	    initNectar+=newFlower.getCurrNectar();
 	}
+    }
+    
+    private void spawnBees(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context,
+	    int communicationRadius, int beeSight,int beeCount, int maxCapacity)
+    {
+	maxHoneyAllBees = 0;
+	nrFighters = 0;
+	nrCollectors = 0;
+	ratioFighterCollector = 0;
+	
+	for (int i = 0; i < beeCount; i++)
+	{
+	    Bee newBee = new Bee(space, grid, communicationRadius, beeSight, hives, context, maxCapacity);
+	    context.add(newBee);
+	    NdPoint beePt = space.getLocation(newBee);
+	    grid.moveTo(newBee, (int) beePt.getX(), (int) beePt.getY());
+	    maxHoneyAllBees+=maxCapacity;
+	    
+	    if (newBee.getFightingSkill() > 5)
+		nrFighters++;
+	    else
+		nrCollectors++;
+	    
+	    try
+	    {
+		mainContainer.acceptNewAgent("bee" + i, newBee).start();
+	    } catch (StaleProxyException e)
+	    {
+		e.printStackTrace();
+	    }
+	}
+	
+	ratioFighterCollector = nrFighters/(double)nrCollectors;
+	return;
     }
 
     private void spawnHives(int hiveCount, Grid<Object> grid, int initNectar)
@@ -105,27 +145,6 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 	    NdPoint hivePt = space.getLocation(newHive);
 	    grid.moveTo(newHive, (int) hivePt.getX(), (int) hivePt.getY());
 	    hives.add(newHive);
-	}
-	return;
-    }
-
-    private void spawnBees(ContinuousSpace<Object> space, Grid<Object> grid, Context<Object> context,
-	    int communicationRadius, int beeSight,int beeCount, int maxCapacity)
-    {
-	for (int i = 0; i < beeCount; i++)
-	{
-	    Bee newBee = new Bee(space, grid, communicationRadius, beeSight, hives, context, maxCapacity);
-	    context.add(newBee);
-	    NdPoint beePt = space.getLocation(newBee);
-	    grid.moveTo(newBee, (int) beePt.getX(), (int) beePt.getY());
-	    
-	    try
-	    {
-		mainContainer.acceptNewAgent("bee" + i, newBee).start();
-	    } catch (StaleProxyException e)
-	    {
-		e.printStackTrace();
-	    }
 	}
 	return;
     }
@@ -148,6 +167,13 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 		e.printStackTrace();
 	    }
 	}
+	return;
+    }
+    
+    private void spawnStats(int maxHoneyAllBees, double ratioFighterCollector, int initNectar)
+    {
+	Stats newStats = new Stats(maxHoneyAllBees, ratioFighterCollector, initNectar);
+	context.add(newStats);
 	return;
     }
 

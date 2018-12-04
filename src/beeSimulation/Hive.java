@@ -12,11 +12,16 @@ public class Hive
 
     public Hive(Grid<Object> grid, int initNectar)
     {
+	this.grid = grid;
 	this.totalHoneyCollected = 0;
 	this.nrBeesReturned = 0;
 	this.percentageHoneyCollected = 0;
 	this.initialNectar = initNectar;
-	this.grid=grid;
+    }
+
+    public Grid<Object> getGrid()
+    {
+	return grid;
     }
 
     public int getTotalHoneyCollected()
@@ -28,15 +33,10 @@ public class Hive
     {
 	return this.nrBeesReturned;
     }
-    
+
     public double getPercentageHoneyCollected()
     {
 	return this.percentageHoneyCollected;
-    }
-    
-    public Grid<Object> getGrid()
-    {
-	return grid;
     }
 
     public void incrementHiveStats(int collected)
@@ -47,5 +47,47 @@ public class Hive
 	System.out.println("initial nectar: " + initialNectar);
 	System.out.println("honey collected: " + totalHoneyCollected);
 	System.out.println("% honey collected so far: " + percentageHoneyCollected);
+	System.out.println("max all bees can carry: " + getMaxAllBees());
+	System.out.println("% max q as abelhas podem atingir/cap: " + getBeeCap());
+	System.out.println("ratio fighter-collector: " + getRatio());
+    }
+
+    private double getBeeCap()
+    {
+	double beeCap = 0.0;
+	for (Object obj : getGrid().getObjects())
+	{
+	    if (obj instanceof Stats)
+	    {
+		beeCap = ((Stats) obj).getMaxPercentageAllBees();
+	    }
+	}
+	return beeCap;
+    }
+
+    private int getMaxAllBees()
+    {
+	int allBeesCapacity = 0;
+	for (Object obj : getGrid().getObjects())
+	{
+	    if (obj instanceof Stats)
+	    {
+		allBeesCapacity = ((Stats) obj).getMaxHoneyAllBees();
+	    }
+	}
+	return allBeesCapacity;
+    }
+    
+    private double getRatio()
+    {
+	double ratio = 0.0;
+	for (Object obj : getGrid().getObjects())
+	{
+	    if (obj instanceof Stats)
+	    {
+		ratio = ((Stats) obj).getRatioFighterCollector();
+	    }
+	}
+	return ratio;
     }
 }
