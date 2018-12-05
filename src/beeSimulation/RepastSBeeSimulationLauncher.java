@@ -172,7 +172,7 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
     
     private void spawnStats(int maxHoneyAllBees, double ratioFighterCollector, int initNectar)
     {
-	Stats newStats = new Stats(maxHoneyAllBees, ratioFighterCollector, initNectar);
+	Stats newStats = new Stats(maxHoneyAllBees, ratioFighterCollector, initNectar, hives);
 	context.add(newStats);
 	return;
     }

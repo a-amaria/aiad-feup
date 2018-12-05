@@ -50,6 +50,9 @@ public class Hive
 	System.out.println("max all bees can carry: " + getMaxAllBees());
 	System.out.println("% max q as abelhas podem atingir/cap: " + getBeeCap());
 	System.out.println("ratio fighter-collector: " + getRatio());
+	System.out.println("bees performance % " + getPerformance());
+	System.out.println("ratio max all bees can carry/100: " + getRatioBees());
+	System.out.println("nr survivors: " + getSurvivors());
     }
 
     private double getBeeCap()
@@ -78,6 +81,19 @@ public class Hive
 	return allBeesCapacity;
     }
     
+    private int getSurvivors()
+    {
+	int survivors = 0;
+	for (Object obj : getGrid().getObjects())
+	{
+	    if (obj instanceof Stats)
+	    {
+		survivors = ((Stats) obj).getNrBeeSurvivors();
+	    }
+	}
+	return survivors;
+    }
+    
     private double getRatio()
     {
 	double ratio = 0.0;
@@ -86,6 +102,32 @@ public class Hive
 	    if (obj instanceof Stats)
 	    {
 		ratio = ((Stats) obj).getRatioFighterCollector();
+	    }
+	}
+	return ratio;
+    }
+    
+    private double getRatioBees()
+    {
+	double ratio = 0.0;
+	for (Object obj : getGrid().getObjects())
+	{
+	    if (obj instanceof Stats)
+	    {
+		ratio = ((Stats) obj).getRatioBeeCapacity();
+	    }
+	}
+	return ratio;
+    }
+    
+    private double getPerformance()
+    {
+	double ratio = 0.0;
+	for (Object obj : getGrid().getObjects())
+	{
+	    if (obj instanceof Stats)
+	    {
+		ratio = ((Stats) obj).getOverallBeesPerformance();
 	    }
 	}
 	return ratio;

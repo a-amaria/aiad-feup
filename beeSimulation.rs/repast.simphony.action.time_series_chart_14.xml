@@ -1,9 +1,9 @@
 <repast.simphony.chart2.engine.TimeSeriesChartDescriptor simphonyVersion="2.5.0">
-  <name>Fighter Collector Ratio</name>
-  <dataSet>Fighter/Collector Ratio</dataSet>
+  <name>Bee Survivals</name>
+  <dataSet>Bee Survivals</dataSet>
   <xAxisLabel>Tick Count</xAxisLabel>
   <yAxisLabel></yAxisLabel>
-  <chartTitle>Fighter Collector Ratio</chartTitle>
+  <chartTitle>Bee Survivals</chartTitle>
   <type>TIME_SERIES</type>
   <background>
     <red>192</red>
@@ -21,12 +21,12 @@
   <showLegend>true</showLegend>
   <seriesIds>
     <entry>
-      <string>ratio</string>
+      <string>Bee Survivals</string>
       <SeriesData>
-        <label>ratio</label>
+        <label>Bee Survivals</label>
         <color>
-          <red>153</red>
-          <green>0</green>
+          <red>0</red>
+          <green>153</green>
           <blue>153</blue>
           <alpha>255</alpha>
         </color>
