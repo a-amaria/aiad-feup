@@ -280,7 +280,7 @@ public class Bee extends Agent
 		rfh.setContent(dangerousBuzz.getAID().toString());
 		rfh.setConversationId("danger");
 		rfh.setReplyWith("rfh" + System.currentTimeMillis()); // Unique value
-		System.out.println("Sending RFH danger messages");
+		//System.out.println("Sending RFH danger messages");
 		getAgent().send(rfh);
 	    } catch (NullPointerException exception)
 	    {
@@ -316,6 +316,11 @@ public class Bee extends Agent
 		{
 		    setRescuer(msg.getSender());
 		    incrementAgreed();
+		    for (Object obj : getGrid().getObjects())
+		    {
+			if (obj instanceof Stats)
+			    ((Stats) obj).incrementMurderContracts();
+		    }
 		}
 		if (msg.getPerformative() == ACLMessage.REQUEST)
 		{
@@ -334,6 +339,11 @@ public class Bee extends Agent
 			if (targetBuzzer != null)
 			{
 			    incrementAgreed();
+			    for (Object obj : getGrid().getObjects())
+			    {
+				if (obj instanceof Stats)
+				    ((Stats) obj).incrementMurderContracts();
+			    }
 			    murderEdge = ((Network<Object>) context.getProjection("Killbeel Network")).addEdge(myAgent,
 				    targetBuzzer);
 			}
@@ -456,7 +466,7 @@ public class Bee extends Agent
 		getBeeSight());
 
 	List<GridCell<Flower>> gridCells = nghCreator.getNeighborhood(true);
-	Flower flower = new Flower();
+	Flower flower = null;
 	double max = getFlowerWithMostNectar().getCurrNectar();
 	for (GridCell<Flower> cell : gridCells)
 	{
@@ -464,9 +474,9 @@ public class Bee extends Agent
 	    {
 		if (item instanceof Flower)
 		{
-		    flower = (Flower) item;
-		    if (flower.getCurrNectar() > max)
+		    if (((Flower) item).getCurrNectar() > max)
 		    {
+			flower=(Flower) item;
 			max = flower.getCurrNectar();
 			setCellWithMostNectar(cell);
 			setFlowerWithMostNectar((Flower) item);
@@ -474,8 +484,8 @@ public class Bee extends Agent
 		}
 	    }
 	}
-
-	if (getCellWithMostNectar() == null)
+	
+	if (max==0  || getCellWithMostNectar() == null)
 	{
 	    moveTowards(null);
 	    return;

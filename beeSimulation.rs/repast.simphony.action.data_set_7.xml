@@ -1,5 +1,5 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.5.0">
-  <name>Overall Bee Performance</name>
+  <name>Bee Survivals</name>
   <type>AGGREGATE</type>
   <inclTick>true</inclTick>
   <inclBatchRun>false</inclBatchRun>
@@ -11,16 +11,16 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>ONE_TIME</frequency>
-    <hashCode>335651163</hashCode>
+    <hashCode>1655435114</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
     <entry>
-      <string>Bee Performance</string>
+      <string>Bee Survivals</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>Bee Performance</id>
+        <id>Bee Survivals</id>
         <className>beeSimulation.Stats</className>
-        <methodName>getOverallBeesPerformance</methodName>
+        <methodName>getNrBeeSurvivors</methodName>
         <aggType>SUM</aggType>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>

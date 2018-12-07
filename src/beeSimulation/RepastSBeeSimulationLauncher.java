@@ -130,8 +130,11 @@ public class RepastSBeeSimulationLauncher extends RepastSLauncher
 		e.printStackTrace();
 	    }
 	}
-	
-	ratioFighterCollector = nrFighters/(double)nrCollectors;
+	if(nrCollectors==0)
+	    ratioFighterCollector=nrFighters;
+	else if(nrFighters==0)
+	    ratioFighterCollector=1/nrCollectors;
+	else ratioFighterCollector = nrFighters/nrCollectors;
 	return;
     }
 

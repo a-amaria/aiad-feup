@@ -1,26 +1,26 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.5.0">
-  <name>Fighter/Collector Ratio</name>
+  <name>Overall Bee Performance</name>
   <type>AGGREGATE</type>
   <inclTick>true</inclTick>
   <inclBatchRun>false</inclBatchRun>
   <inclRandomSeed>false</inclRandomSeed>
   <scheduleParams>
-    <start>1.0</start>
+    <start>Infinity</start>
     <interval>0.0</interval>
-    <priority>NaN</priority>
-    <pType>RANDOM</pType>
+    <priority>-Infinity</priority>
+    <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>ONE_TIME</frequency>
-    <hashCode>1207074472</hashCode>
+    <hashCode>335651163</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
     <entry>
-      <string>ratio</string>
+      <string>Bee Performance</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>ratio</id>
+        <id>Bee Performance</id>
         <className>beeSimulation.Stats</className>
-        <methodName>getRatioFighterCollector</methodName>
+        <methodName>getOverallBeesPerformance</methodName>
         <aggType>SUM</aggType>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>

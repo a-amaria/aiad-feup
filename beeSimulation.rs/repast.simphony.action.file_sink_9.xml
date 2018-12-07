@@ -1,0 +1,15 @@
+<repast.simphony.data2.engine.FileSinkDescriptor simphonyVersion="2.5.0">
+  <name>Final Sink</name>
+  <dataSet>Final Set</dataSet>
+  <delimiter>,</delimiter>
+  <format>TABULAR</format>
+  <sourceIds class="linked-hash-set">
+    <string>NrBeeSurvivors</string>
+    <string>FighterCollectorRatio</string>
+    <string>NrMurderContracts</string>
+    <string>BeeCap100Ratio</string>
+    <string>BeePerformance</string>
+  </sourceIds>
+  <fileName>ModelOutput.csv</fileName>
+  <addTimeStamp>true</addTimeStamp>
+</repast.simphony.data2.engine.FileSinkDescriptor>

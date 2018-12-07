@@ -1,5 +1,5 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.5.0">
-  <name>Flowers Nectar</name>
+  <name>Murder Contracts</name>
   <type>AGGREGATE</type>
   <inclTick>true</inclTick>
   <inclBatchRun>false</inclBatchRun>
@@ -11,16 +11,16 @@
     <pType>LAST</pType>
     <duration>-1.0</duration>
     <frequency>REPEAT</frequency>
-    <hashCode>-92671706</hashCode>
+    <hashCode>1763537351</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
     <entry>
-      <string>Flowers nectar</string>
+      <string>Number contracts</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>Flowers nectar</id>
-        <className>beeSimulation.Flower</className>
-        <methodName>getCurrNectar</methodName>
+        <id>Number contracts</id>
+        <className>beeSimulation.Bee</className>
+        <methodName>getAgreedCount</methodName>
         <aggType>SUM</aggType>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>

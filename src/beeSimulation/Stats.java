@@ -9,7 +9,7 @@ public class Stats
     private double maxPercentageAllBees;
     private int initialNectar;
     private List<Hive> hives;
-    private int nrBeeSurvivors;
+    private int nrMurderContracts;
 
     public Stats(int maxHoneyAllBees, double ratioFighterCollector, int initNectar, List<Hive> hives)
     {
@@ -18,7 +18,7 @@ public class Stats
 	this.initialNectar = initNectar;
 	this.maxPercentageAllBees = (maxHoneyAllBees/(double)initNectar)*100;
 	this.hives = hives;
-	this.nrBeeSurvivors = 0;
+	this.nrMurderContracts = 0;
     }
 
     public int getMaxHoneyAllBees()
@@ -60,5 +60,16 @@ public class Stats
 	for (Hive hive : hives)
 	    totalNrBeeSurvivors += hive.getNrBeesReturned();
 	return totalNrBeeSurvivors;
+    }
+    
+    public void incrementMurderContracts()
+    {
+	nrMurderContracts++;
+	return;
+    }
+    
+    public int getNrMurderContracts()
+    {
+	return nrMurderContracts;
     }
 }

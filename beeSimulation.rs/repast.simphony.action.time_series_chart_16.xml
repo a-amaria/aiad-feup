@@ -1,9 +1,9 @@
 <repast.simphony.chart2.engine.TimeSeriesChartDescriptor simphonyVersion="2.5.0">
-  <name>Bee Performance</name>
-  <dataSet>Overall Bee Performance</dataSet>
+  <name>Bee Survivals</name>
+  <dataSet>Bee Survivals</dataSet>
   <xAxisLabel>Tick Count</xAxisLabel>
   <yAxisLabel></yAxisLabel>
-  <chartTitle>Bee Performance</chartTitle>
+  <chartTitle>Bee Survivals</chartTitle>
   <type>TIME_SERIES</type>
   <background>
     <red>192</red>
@@ -21,13 +21,13 @@
   <showLegend>true</showLegend>
   <seriesIds>
     <entry>
-      <string>Bee Performance</string>
+      <string>Bee Survivals</string>
       <SeriesData>
-        <label>Bee Performance</label>
+        <label>Bee Survivals</label>
         <color>
-          <red>102</red>
-          <green>255</green>
-          <blue>102</blue>
+          <red>0</red>
+          <green>153</green>
+          <blue>153</blue>
           <alpha>255</alpha>
         </color>
       </SeriesData>

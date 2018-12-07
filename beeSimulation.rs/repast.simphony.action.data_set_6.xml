@@ -1,26 +1,26 @@
 <repast.simphony.data2.engine.DataSetDescriptor simphonyVersion="2.5.0">
-  <name>Bee Survivals</name>
+  <name>Total Bee Capacity/100 Ratio</name>
   <type>AGGREGATE</type>
   <inclTick>true</inclTick>
   <inclBatchRun>false</inclBatchRun>
   <inclRandomSeed>false</inclRandomSeed>
   <scheduleParams>
-    <start>Infinity</start>
+    <start>1.0</start>
     <interval>0.0</interval>
-    <priority>-Infinity</priority>
-    <pType>LAST</pType>
+    <priority>NaN</priority>
+    <pType>RANDOM</pType>
     <duration>-1.0</duration>
     <frequency>ONE_TIME</frequency>
-    <hashCode>1655435114</hashCode>
+    <hashCode>-38830214</hashCode>
   </scheduleParams>
   <atEnd>false</atEnd>
   <methodDataSources class="linked-hash-map">
     <entry>
-      <string>Bee Survivals</string>
+      <string>Total Bee Cap Ratio</string>
       <repast.simphony.data2.engine.MethodDataSourceDefinition>
-        <id>Bee Survivals</id>
+        <id>Total Bee Cap Ratio</id>
         <className>beeSimulation.Stats</className>
-        <methodName>getNrBeeSurvivors</methodName>
+        <methodName>getRatioBeeCapacity</methodName>
         <aggType>SUM</aggType>
       </repast.simphony.data2.engine.MethodDataSourceDefinition>
     </entry>

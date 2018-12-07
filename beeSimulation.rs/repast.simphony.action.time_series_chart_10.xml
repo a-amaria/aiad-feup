@@ -1,9 +1,9 @@
 <repast.simphony.chart2.engine.TimeSeriesChartDescriptor simphonyVersion="2.5.0">
-  <name>Murder Requests Over Time</name>
-  <dataSet>Murder Contracts</dataSet>
+  <name>Fighter Collector Ratio</name>
+  <dataSet>Fighter/Collector Ratio</dataSet>
   <xAxisLabel>Tick Count</xAxisLabel>
-  <yAxisLabel>Murder Contracts</yAxisLabel>
-  <chartTitle>Murder Contracts Over Time</chartTitle>
+  <yAxisLabel></yAxisLabel>
+  <chartTitle>Fighter Collector Ratio</chartTitle>
   <type>TIME_SERIES</type>
   <background>
     <red>192</red>
@@ -21,13 +21,13 @@
   <showLegend>true</showLegend>
   <seriesIds>
     <entry>
-      <string>Number contracts</string>
+      <string>ratio</string>
       <SeriesData>
-        <label>Number contracts</label>
+        <label>ratio</label>
         <color>
           <red>153</red>
           <green>0</green>
-          <blue>0</blue>
+          <blue>153</blue>
           <alpha>255</alpha>
         </color>
       </SeriesData>
